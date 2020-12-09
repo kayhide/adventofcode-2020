@@ -1,0 +1,64 @@
+#! /usr/bin/env bash
+
+set -eu
+
+AOC_URL="https://adventofcode.com/2020"
+
+die() {
+    if [[ -n ${1:-} ]]; then
+        >&2 echo "$1"
+    fi
+    exit 1
+}
+
+fetch-input() {
+    local day="${1:-}"
+    if [[ -z $day ]]; then
+        die "Day is missing"
+    fi
+
+    local url="$AOC_URL/day/$day/input"
+    local dst="day$(printf "%02d" $day)-input.txt"
+
+    curl -b "session=$SESSION" -L "$url" > "$dst"
+    echo "ok"
+}
+
+dev() {
+    local day="${1:-}"
+    if [[ -z $day ]]; then
+        die "Day is missing"
+    fi
+
+    local mod="day$(printf "%02d" $day)"
+    local src="$mod.erl"
+
+    if [[ ! -f "$mod-input.txt" ]]; then
+        fetch-input "$day"
+    fi
+    if [[ ! -f $src ]]; then
+        cat <<EOF > "$src"
+-module($mod).
+-export([run/0]).
+
+run() ->
+  io:format("Day $day is ready.~n"),
+  io:format("Find me at: $src~n").
+EOF
+    fi
+
+    ls | entr -c bash -c "erlc $src; erl -noshell -run $mod run -run init stop"
+}
+
+
+command="${1:-}"
+
+if [[ -z $command ]]; then
+    die "No argument"
+fi
+if ! type "$command" >/dev/null 2>&1; then
+    die "Command not found: $command"
+fi
+
+shift
+"$command" "$@"
