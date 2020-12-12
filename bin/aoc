@@ -43,7 +43,30 @@ dev() {
 
 run() ->
   io:format("Day $day is ready.~n"),
-  io:format("Find me at: $src~n").
+  io:format("Find me at: $src~n"),
+  Input = input(),
+  run1(Input),
+  run2(Input).
+
+run1(Input) ->
+  Ans = 1,
+  io:format("~B~n", [Ans]).
+
+run2(Input) ->
+  Ans = 2,
+  io:format("~B~n", [Ans]).
+
+input() ->
+  { ok, Device } = file:open("$mod-input.txt", [read]),
+  try get_all_lines(Device)
+    after file:close(Device)
+  end.
+
+get_all_lines(Device) ->
+  case io:get_line(Device, "") of
+    eof -> [];
+    Line -> [string:chomp(Line) | get_all_lines(Device)]
+  end.
 EOF
     fi
 
