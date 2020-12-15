@@ -14,5 +14,6 @@ chunks(N, Xs) ->
   end.
 
 puts() -> io:format("~n").
-puts(X) when is_list(X) -> io:format("~s~n", [X]);
 puts(X) -> io:format("~p~n", [X]).
+
+echo(X) -> io:format("~s~n", [X]).
