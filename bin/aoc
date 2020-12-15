@@ -36,10 +36,16 @@ dev() {
     if [[ ! -f "$mod-input.txt" ]]; then
         fetch-input "$day"
     fi
+
+    if [[ ! -f "utils.beam" ]]; then
+        erlc utils.erl
+    fi
+
     if [[ ! -f $src ]]; then
         cat <<EOF > "$src"
 -module($mod).
 -export([run/0]).
+-import(utils, [puts/1]).
 
 run() ->
   io:format("Day $day is ready.~n"),
@@ -50,11 +56,11 @@ run() ->
 
 run1(Input) ->
   Ans = 1,
-  io:format("~B~n", [Ans]).
+  puts(Ans).
 
 run2(Input) ->
   Ans = 2,
-  io:format("~B~n", [Ans]).
+  puts(Ans).
 
 input() ->
   { ok, Device } = file:open("$mod-input.txt", [read]),
