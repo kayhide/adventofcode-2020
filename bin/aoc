@@ -11,6 +11,19 @@ die() {
     exit 1
 }
 
+fetch-html() {
+    local day="${1:-}"
+    if [[ -z $day ]]; then
+        die "Day is missing"
+    fi
+
+    local url="$AOC_URL/day/$day"
+    local dst="day$(printf "%02d" $day).html"
+
+    curl -b "session=$SESSION" -L "$url" > "$dst"
+    echo "create $dst"
+}
+
 fetch-input() {
     local day="${1:-}"
     if [[ -z $day ]]; then
