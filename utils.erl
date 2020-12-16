@@ -17,3 +17,15 @@ puts() -> io:format("~n").
 puts(X) -> io:format("~p~n", [X]).
 
 echo(X) -> io:format("~s~n", [X]).
+
+input(Filename) ->
+  { ok, Device } = file:open(Filename, [read]),
+  try get_all_lines(Device)
+    after file:close(Device)
+  end.
+
+get_all_lines(Device) ->
+  case io:get_line(Device, "") of
+    eof -> [];
+    Line -> [string:chomp(Line) | get_all_lines(Device)]
+  end.

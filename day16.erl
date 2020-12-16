@@ -1,10 +1,10 @@
 -module(day16).
 -export([run/0]).
--import(utils, [puts/0, puts/1]).
+-import(utils, [puts/0, puts/1, input/1]).
 
 run() ->
   puts(),
-  Input = input(),
+  Input = input("day16-input.txt"),
   run1(Input),
   run2(Input).
 
@@ -90,16 +90,4 @@ chunks(Input) ->
   case Current of
     "" -> Chunks;
     _ -> Chunks ++ [Current]
-  end.
-
-input() ->
-  { ok, Device } = file:open("day16-input.txt", [read]),
-  try get_all_lines(Device)
-    after file:close(Device)
-  end.
-
-get_all_lines(Device) ->
-  case io:get_line(Device, "") of
-    eof -> [];
-    Line -> [string:chomp(Line) | get_all_lines(Device)]
   end.
