@@ -58,12 +58,11 @@ dev() {
         cat <<EOF > "$src"
 -module($mod).
 -export([run/0]).
--import(utils, [puts/1]).
+-import(utils, [puts/0, puts/1, input/1]).
 
 run() ->
-  io:format("Day $day is ready.~n"),
-  io:format("Find me at: $src~n"),
-  Input = input(),
+  puts(),
+  Input = input("$mod-input.txt"),
   run1(Input),
   run2(Input).
 
@@ -74,18 +73,6 @@ run1(Input) ->
 run2(Input) ->
   Ans = 2,
   puts(Ans).
-
-input() ->
-  { ok, Device } = file:open("$mod-input.txt", [read]),
-  try get_all_lines(Device)
-    after file:close(Device)
-  end.
-
-get_all_lines(Device) ->
-  case io:get_line(Device, "") of
-    eof -> [];
-    Line -> [string:chomp(Line) | get_all_lines(Device)]
-  end.
 EOF
     fi
 
