@@ -12,8 +12,27 @@ run1(Input) ->
   [CardPub, DoorPub] = [ list_to_integer(X) || X <- Input ],
 
   Divider = 20201227,
-  CardLoop = find_loop_size(make_step_function(7, Divider), CardPub),
-  DoorLoop = find_loop_size(make_step_function(7, Divider), DoorPub),
+  % CardLoop = find_loop_size(make_step_function(7, Divider), CardPub),
+  % DoorLoop = find_loop_size(make_step_function(7, Divider), DoorPub),
+  start_finder(make_step_function(7, Divider)) ! { self(), card, CardPub },
+  start_finder(make_step_function(7, Divider)) ! { self(), door, DoorPub },
+
+  CardLoop =
+    receive
+      { card, X } -> X
+    after
+      1000 -> timeout
+    end,
+    
+  DoorLoop =
+    receive
+      { door, Y } -> Y
+    after
+      1000 -> timeout
+    end,
+
+  % puts({ card, CardLoop }),
+  % puts({ door, DoorLoop }),
   EncKey = iterate(CardLoop, make_step_function(DoorPub, Divider), 1),
   EncKey = iterate(DoorLoop, make_step_function(CardPub, Divider), 1),
   Ans = EncKey,
@@ -31,3 +50,12 @@ find_loop_size(F, Pub, X, N) ->
   
 iterate(0, _, X) -> X;
 iterate(N, F, X) -> iterate(N - 1, F, F(X)).
+
+start_finder(F) ->
+  spawn(
+    fun() ->
+      receive
+        { From, Key, X } -> From ! { Key, find_loop_size(F, X) }
+      end
+    end).
+
