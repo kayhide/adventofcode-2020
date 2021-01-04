@@ -34,43 +34,36 @@ construct(Max, Input) ->
       nil -> { Ns, lists:max(Ns) };
       _ -> { Ns ++ lists:seq(lists:max(Ns) + 1, Max), Max }
     end,
-  G = digraph:new(),
-  Vs = [ digraph:add_vertex(G, N) || N <- Ns1 ],
-  [ digraph:add_edge(G, V1, V2) || { V1, V2 } <- lists:zip(Ns1, tl(Ns1) ++ [hd(Ns1)]) ],
-  { G, hd(Vs), Max1 }.
-  
-move({ G, Cur, Max }) ->
-  [N1] = digraph:out_neighbours(G, Cur),
-  [N2] = digraph:out_neighbours(G, N1),
-  [N3] = digraph:out_neighbours(G, N2),
-  [N4] = digraph:out_neighbours(G, N3),
+  Set = ets:new(cups, [set, private]),
+  [ ets:insert(Set, {V1, V2}) || { V1, V2 } <- lists:zip(Ns1, tl(Ns1) ++ [hd(Ns1)]) ],
+  { Set, hd(Ns), Max1 }.
+
+move({ T, Cur, Max }) ->
+  [{_, N1}] = ets:lookup(T, Cur),
+  [{_, N2}] = ets:lookup(T, N1),
+  [{_, N3}] = ets:lookup(T, N2),
+  [{_, N4}] = ets:lookup(T, N3),
   Dst = find_destination(Cur - 1, Max, [N1, N2, N3]),
-  % puts(take(9, Cur, { G, Cur, Max })),
+  % puts(take(9, Cur, { T, Cur, Max })),
   % puts({ current, Cur, destination, Dst, taking, [N1, N2, N3] }),
-  outsert(G, N1, N3),
-  insert_after(G, Dst, N1, N3),
-  { G, N4, Max }.
+  outsert(T, Cur, N4),
+  insert_after(T, Dst, N1, N3),
+  { T, N4, Max }.
 
-outsert(G, V0, V1) ->
-  [Prev] = digraph:in_neighbours(G, V0),
-  [Next] = digraph:out_neighbours(G, V1),
-  digraph:del_edges(G, digraph:in_edges(G, V0)),
-  digraph:del_edges(G, digraph:out_edges(G, V1)),
-  digraph:add_edge(G, Prev, Next).
+outsert(T, V0, V1) ->
+  ets:insert(T, {V0, V1}).
 
-insert_after(G, Prev, V0, V1) ->
-  [Next] = digraph:out_neighbours(G, Prev),
-  digraph:del_edges(G, digraph:out_edges(G, Prev)),
-  digraph:del_edges(G, digraph:in_edges(G, Next)),
-  digraph:add_edge(G, Prev, V0),
-  digraph:add_edge(G, V1, Next).
+insert_after(T, Prev, V0, V1) ->
+  [{_, Next}] = ets:lookup(T, Prev),
+  ets:insert(T, {Prev, V0}),
+  ets:insert(T, {V1, Next}).
   
-take(Count, At, { G, _, _ }) -> take(Count, At, G);
-take(Count, At, G) ->
+take(Count, At, { T, _, _ }) -> take(Count, At, T);
+take(Count, At, T) ->
   { _, Ns } =
   lists:foldl(
     fun(_, { V, Vs }) ->
-      [Next] = digraph:out_neighbours(G, V) ,
+      [{_, Next}] = ets:lookup(T, V) ,
       { Next, Vs ++ [V] }
     end, { At, [] }, lists:seq(1, Count)),
   Ns.
